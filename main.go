@@ -19,6 +19,7 @@ func main() {
 	prs := try(gh.SearchPRs(
 		[]string{"LeoRiether", "qrno", "joaovaladares", "figueredo",
 			"fabricio-suarte", "daviromao", "gabrielpessoa1"},
+		"inloco",
 		time.Now().Add(-14*Day),
 	))
 

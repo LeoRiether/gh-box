@@ -22,8 +22,8 @@ func GetUser() (string, error) {
 	return response.Login, nil
 }
 
-func SearchPRs(authors []string, createdAfter time.Time) (PullRequests, error) {
-	args := makeSearchPRArgs(authors, createdAfter)
+func SearchPRs(authors []string, org string, createdAfter time.Time) (PullRequests, error) {
+	args := makeSearchPRArgs(authors, org, createdAfter)
 
 	log.Info().Msg("searching PRs")
 	stdout, _, err := cli.Exec(args...)
@@ -39,7 +39,7 @@ func SearchPRs(authors []string, createdAfter time.Time) (PullRequests, error) {
 	return prs, nil
 }
 
-func makeSearchPRArgs(authors []string, createdAfter time.Time) []string {
+func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []string {
 	args := []string{
 		"search", "prs",
 		"--created", ">=" + createdAfter.Format(time.DateOnly),
@@ -53,6 +53,17 @@ func makeSearchPRArgs(authors []string, createdAfter time.Time) []string {
 			args = append(args, "OR")
 		}
 		args = append(args, "author:"+author)
+
+		if i == 0 {
+			args[len(args)-1] = "(" + args[len(args)-1]
+		} else if i == len(authors)-1 {
+			args[len(args)-1] = args[len(args)-1] + ")"
+		}
+	}
+
+	// --- filter organization ---
+	if org != "" {
+		args = append(args, "org:"+org)
 	}
 
 	return args
