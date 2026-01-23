@@ -37,7 +37,7 @@ type ReviewDecision string
 
 const (
 	ReviewRequired   ReviewDecision = "REVIEW_REQUIRED"
-	Accepted         ReviewDecision = "ACCEPTED"
+	Approved         ReviewDecision = "APPROVED"
 	ChangesRequested ReviewDecision = "CHANGES_REQUESTED"
 )
 
@@ -78,7 +78,7 @@ func (pr PRDetails) Style() string {
 
 	reviewDecision := ""
 	switch pr.ReviewDecision {
-	case Accepted:
+	case Approved:
 		reviewDecision = green.Render(" ")
 	case ChangesRequested:
 		reviewDecision = red.Render(" ")
