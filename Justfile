@@ -1,2 +1,3 @@
-install:
-    gh extension install --force .
+run:
+    go build
+    gh box
