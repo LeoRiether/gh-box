@@ -23,12 +23,9 @@ func main() {
 		time.Now().Add(-14*Day),
 	))
 
-	slices.SortFunc(prs, func(a, b gh.PullRequest) int { return a.UpdatedAt.Compare(b.UpdatedAt) })
+	slices.SortFunc(prs, func(a, b gh.PullRequest) int { return b.UpdatedAt.Compare(a.UpdatedAt) })
 
-	for _, pr := range prs {
-		fmt.Printf("[%s] %s -- by %s\n",
-			pr.State, pr.Title, pr.Author.Login)
-	}
+	fmt.Println(prs.Style())
 }
 
 func try[T any](value T, err error) T {
