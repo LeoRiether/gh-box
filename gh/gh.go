@@ -42,8 +42,8 @@ func SearchPRs(authors []string, org string, createdAfter time.Time) (PullReques
 func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []string {
 	args := []string{
 		"search", "prs",
-		// "--created", ">=" + createdAfter.Format(time.DateOnly),
-		"--json", "author,createdAt,updatedAt,title,state,url",
+		"--created", ">=" + createdAfter.Format(time.DateOnly),
+		"--json", "author,createdAt,updatedAt,title,state,isDraft,url",
 		"--",
 	}
 
