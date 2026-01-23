@@ -77,6 +77,8 @@ func (pr PRDetails) Style() string {
 		icon = ""
 	}
 
+	prcolor := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
+
 	reviewDecision := ""
 	switch pr.ReviewDecision {
 	case Approved:
@@ -114,7 +116,7 @@ func (pr PRDetails) Style() string {
 		icon,
 		reviewDecision,
 		mergeableStatus,
-		pr.Title,
+		prcolor.Render(pr.Title),
 		neutral.Render(pr.Author.Login),
 		neutral.Render(pr.URL))) + "\n"
 }
