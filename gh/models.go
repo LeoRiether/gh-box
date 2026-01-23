@@ -109,7 +109,7 @@ func (pr PRDetails) Style() string {
 		Width(80).
 		AlignHorizontal(lipgloss.Left)
 
-	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#999"))
+	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#bbb"))
 
 	return card.Render(fmt.Sprintf("%s%s%s %s \n%s | %s",
 		icon,
