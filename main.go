@@ -23,9 +23,13 @@ func main() {
 		time.Now().Add(-14*Day),
 	))
 
-	slices.SortFunc(prs, func(a, b gh.PullRequest) int { return b.UpdatedAt.Compare(a.UpdatedAt) })
+	prdetails := try(gh.ViewPRsDetails(prs))
 
-	fmt.Println(prs.Style())
+	slices.SortFunc(prdetails, func(a, b gh.PRDetails) int {
+		return -a.UpdatedAt.Compare(b.UpdatedAt)
+	})
+
+	fmt.Println(prdetails.Style())
 }
 
 func try[T any](value T, err error) T {

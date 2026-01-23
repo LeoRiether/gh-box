@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 type Author struct {
@@ -30,7 +31,31 @@ type PullRequest struct {
 	URL       string    `json:"url"`
 }
 
-func (pr PullRequest) Style() string {
+type PullRequests []PullRequest
+
+type ReviewDecision string
+
+const (
+	ReviewRequired   ReviewDecision = "REVIEW_REQUIRED"
+	Accepted         ReviewDecision = "ACCEPTED"
+	ChangesRequested ReviewDecision = "CHANGES_REQUESTED"
+)
+
+type MergeableStatus string
+
+const (
+	Mergeable   MergeableStatus = "MERGEABLE"
+	Conflicting MergeableStatus = "CONFLICTING"
+	Unknown     MergeableStatus = "UNKNOWN"
+)
+
+type PRDetails struct {
+	PullRequest    `json:"-"`
+	ReviewDecision ReviewDecision  `json:"reviewDecision"`
+	Mergeable      MergeableStatus `json:"mergeable"`
+}
+
+func (pr PRDetails) Style() string {
 	color := "#ffffff"
 	icon := ""
 	switch {
@@ -48,7 +73,30 @@ func (pr PullRequest) Style() string {
 		icon = ""
 	}
 
-	style := lipgloss.NewStyle().
+	green := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightGreen))
+	red := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))
+
+	reviewDecision := ""
+	switch pr.ReviewDecision {
+	case Accepted:
+		reviewDecision = green.Render(" ")
+	case ChangesRequested:
+		reviewDecision = red.Render(" ")
+	case ReviewRequired:
+		reviewDecision = ""
+	}
+
+	mergeableStatus := ""
+	switch pr.Mergeable {
+	case Mergeable:
+		mergeableStatus = green.Render(" ")
+	case Conflicting:
+		mergeableStatus = red.Render(" ")
+	case Unknown:
+		mergeableStatus = ""
+	}
+
+	card := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(color)).
 		PaddingLeft(2).
 		PaddingRight(2).
@@ -63,16 +111,18 @@ func (pr PullRequest) Style() string {
 
 	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#999"))
 
-	return style.Render(fmt.Sprintf("%s %s\n%s | %s",
+	return card.Render(fmt.Sprintf("%s%s%s %s \n%s | %s",
 		icon,
+		reviewDecision,
+		mergeableStatus,
 		pr.Title,
 		neutral.Render(pr.Author.Login),
 		neutral.Render(pr.URL))) + "\n"
 }
 
-type PullRequests []PullRequest
+type PRDetailsList []PRDetails
 
-func (prs PullRequests) Style() string {
+func (prs PRDetailsList) Style() string {
 	bob := strings.Builder{}
 	for i := range prs {
 		bob.WriteString(prs[i].Style())

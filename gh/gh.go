@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/LeoRiether/gh-box/workers"
 	cli "github.com/cli/go-gh/v2"
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/rs/zerolog/log"
@@ -26,9 +27,9 @@ func SearchPRs(authors []string, org string, createdAfter time.Time) (PullReques
 	args := makeSearchPRArgs(authors, org, createdAfter)
 
 	log.Info().Msg("searching PRs")
-	stdout, _, err := cli.Exec(args...)
+	stdout, stderr, err := cli.Exec(args...)
 	if err != nil {
-		return nil, fmt.Errorf("cli: %w", err)
+		return nil, fmt.Errorf("cli: %w. stderr: %v", err, stderr.String())
 	}
 
 	var prs PullRequests
@@ -42,7 +43,7 @@ func SearchPRs(authors []string, org string, createdAfter time.Time) (PullReques
 func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []string {
 	args := []string{
 		"search", "prs",
-		"--created", ">=" + createdAfter.Format(time.DateOnly),
+		// "--created", ">=" + createdAfter.Format(time.DateOnly),
 		"--json", "author,createdAt,updatedAt,title,state,isDraft,url",
 		"--",
 	}
@@ -67,4 +68,27 @@ func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []st
 	}
 
 	return args
+}
+
+func ViewPRsDetails(prs PullRequests) (PRDetailsList, error) {
+	log.Info().Int("prs", len(prs)).Msg("fetching PR details")
+
+	pool := workers.NewPool(8, func(pr PullRequest) (PRDetails, error) {
+		stdout, stderr, err := cli.Exec(
+			"pr", "view", pr.URL,
+			"--json", "reviewDecision,mergeable")
+		if err != nil {
+			return PRDetails{}, fmt.Errorf("cli: %w. stderr: %v", err, stderr.String())
+		}
+
+		var details PRDetails
+		if err := json.Unmarshal(stdout.Bytes(), &details); err != nil {
+			return PRDetails{}, err
+		}
+
+		details.PullRequest = pr
+		return details, nil
+	})
+
+	return pool.Process(prs)
 }
