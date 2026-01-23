@@ -79,9 +79,9 @@ func (pr PRDetails) Style() string {
 	reviewDecision := ""
 	switch pr.ReviewDecision {
 	case Approved:
-		reviewDecision = green.Render(" ")
+		reviewDecision = green.Render("  ")
 	case ChangesRequested:
-		reviewDecision = red.Render(" ")
+		reviewDecision = red.Render("  ")
 	case ReviewRequired:
 		reviewDecision = ""
 	}
@@ -89,9 +89,9 @@ func (pr PRDetails) Style() string {
 	mergeableStatus := ""
 	switch pr.Mergeable {
 	case Mergeable:
-		mergeableStatus = green.Render(" ")
+		mergeableStatus = green.Render("  ")
 	case Conflicting:
-		mergeableStatus = red.Render(" ")
+		mergeableStatus = red.Render("  ")
 	case Unknown:
 		mergeableStatus = ""
 	}
@@ -111,7 +111,7 @@ func (pr PRDetails) Style() string {
 
 	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#bbb"))
 
-	return card.Render(fmt.Sprintf("%s%s%s %s \n%s | %s",
+	return card.Render(fmt.Sprintf("%s%s%s  %s \n%s | %s",
 		icon,
 		reviewDecision,
 		mergeableStatus,
