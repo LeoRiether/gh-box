@@ -56,6 +56,10 @@ type PRDetails struct {
 }
 
 func (pr PRDetails) Style() string {
+	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#bbb"))
+	green := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightGreen))
+	red := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))
+
 	color := "#ffffff"
 	icon := ""
 	switch {
@@ -73,9 +77,6 @@ func (pr PRDetails) Style() string {
 		icon = ""
 	}
 
-	green := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightGreen))
-	red := lipgloss.NewStyle().Foreground(lipgloss.ANSIColor(termenv.ANSIBrightRed))
-
 	reviewDecision := ""
 	switch pr.ReviewDecision {
 	case Approved:
@@ -83,7 +84,7 @@ func (pr PRDetails) Style() string {
 	case ChangesRequested:
 		reviewDecision = red.Render("  ")
 	case ReviewRequired:
-		reviewDecision = ""
+		reviewDecision = neutral.Render("  ")
 	}
 
 	mergeableStatus := ""
@@ -108,8 +109,6 @@ func (pr PRDetails) Style() string {
 		BorderRight(true).
 		Width(80).
 		AlignHorizontal(lipgloss.Left)
-
-	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#bbb"))
 
 	return card.Render(fmt.Sprintf("%s%s%s  %s \n%s | %s",
 		icon,
