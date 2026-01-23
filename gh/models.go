@@ -15,7 +15,6 @@ type Author struct {
 type PRState string
 
 const (
-	Draft  PRState = "draft"
 	Open   PRState = "open"
 	Merged PRState = "merged"
 	Closed PRState = "closed"
@@ -26,6 +25,7 @@ type PullRequest struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	State     PRState   `json:"state"`
+	IsDraft   bool      `json:"isDraft"`
 	Title     string    `json:"title"`
 	URL       string    `json:"url"`
 }
@@ -33,19 +33,19 @@ type PullRequest struct {
 func (pr PullRequest) Style() string {
 	color := "#ffffff"
 	icon := ""
-	switch pr.State {
-	case Closed:
-		color = "#C53211"
-		icon = ""
-	case Merged:
-		color = "#853CEA"
-		icon = ""
-	case Open:
-		color = "#0FBF3E"
-		icon = ""
-	case Draft:
+	switch {
+	case pr.IsDraft:
 		color = "#777777"
 		icon = ""
+	case pr.State == Closed:
+		color = "#C53211"
+		icon = ""
+	case pr.State == Merged:
+		color = "#853CEA"
+		icon = ""
+	case pr.State == Open:
+		color = "#0FBF3E"
+		icon = ""
 	}
 
 	style := lipgloss.NewStyle().
