@@ -63,10 +63,11 @@ func (pr PullRequest) Style() string {
 
 	neutral := lipgloss.NewStyle().Foreground(lipgloss.Color("#999"))
 
-	return style.Render(fmt.Sprintf("%s %s\n%s",
+	return style.Render(fmt.Sprintf("%s %s\n%s | %s",
 		icon,
 		pr.Title,
-		neutral.Render(pr.Author.Login))) + "\n"
+		neutral.Render(pr.Author.Login),
+		neutral.Render(pr.URL))) + "\n"
 }
 
 type PullRequests []PullRequest
