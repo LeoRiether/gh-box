@@ -63,15 +63,15 @@ func (pr PRDetails) Style() string {
 	color := "#ffffff"
 	icon := ""
 	switch {
-	case pr.IsDraft:
-		color = "#777777"
-		icon = ""
 	case pr.State == Closed:
 		color = "#C53211"
 		icon = ""
 	case pr.State == Merged:
 		color = "#853CEA"
 		icon = ""
+	case pr.IsDraft:
+		color = "#777777"
+		icon = ""
 	case pr.State == Open:
 		color = "#0FBF3E"
 		icon = ""
