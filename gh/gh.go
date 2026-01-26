@@ -55,7 +55,8 @@ func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []st
 
 		if i == 0 {
 			args[len(args)-1] = "(" + args[len(args)-1]
-		} else if i == len(authors)-1 {
+		}
+		if i == len(authors)-1 {
 			args[len(args)-1] = args[len(args)-1] + ")"
 		}
 	}
