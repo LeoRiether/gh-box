@@ -8,7 +8,6 @@ import (
 	"github.com/LeoRiether/gh-box/workers"
 	cli "github.com/cli/go-gh/v2"
 	"github.com/cli/go-gh/v2/pkg/api"
-	"github.com/rs/zerolog/log"
 )
 
 var restClient, _ = api.DefaultRESTClient()
@@ -26,7 +25,6 @@ func GetUser() (string, error) {
 func SearchPRs(authors []string, org string, createdAfter time.Time) (PullRequests, error) {
 	args := makeSearchPRArgs(authors, org, createdAfter)
 
-	log.Info().Msg("searching PRs")
 	stdout, stderr, err := cli.Exec(args...)
 	if err != nil {
 		return nil, fmt.Errorf("cli: %w. stderr: %v", err, stderr.String())
@@ -43,7 +41,7 @@ func SearchPRs(authors []string, org string, createdAfter time.Time) (PullReques
 func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []string {
 	args := []string{
 		"search", "prs",
-		// "--created", ">=" + createdAfter.Format(time.DateOnly),
+		"--created", ">=" + createdAfter.Format(time.DateOnly),
 		"--json", "author,createdAt,updatedAt,title,state,isDraft,url",
 		"--",
 	}
@@ -71,8 +69,6 @@ func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []st
 }
 
 func ViewPRsDetails(prs PullRequests) (PRDetailsList, error) {
-	log.Info().Int("prs", len(prs)).Msg("fetching PR details")
-
 	pool := workers.NewPool(8, func(pr PullRequest) (PRDetails, error) {
 		stdout, stderr, err := cli.Exec(
 			"pr", "view", pr.URL,
