@@ -1,13 +1,20 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type ConfigPathCmd struct{}
 
 func (c *ConfigPathCmd) Run() error {
-	file, err := Location()
+	dir, file, err := Location()
 	if err != nil {
 		return err
+	}
+
+	if err := os.MkdirAll(dir, os.ModeDir); err != nil {
+		return fmt.Errorf("mkdir %q: %w", dir, err)
 	}
 
 	fmt.Println(file)

@@ -26,7 +26,7 @@ type Box struct {
 func Get() (Config, error) {
 	var empty Config
 
-	file, err := Location()
+	_, file, err := Location()
 	if err != nil {
 		return empty, err
 	}
@@ -46,12 +46,13 @@ func Get() (Config, error) {
 	return config, nil
 }
 
-func Location() (string, error) {
+func Location() (dir, file string, err error) {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
-		return "", ErrNoConfigDir
+		return "", "", ErrNoConfigDir
 	}
 
-	file := path.Join(configDir, "gh-box", "config.yml")
-	return file, nil
+	dir = path.Join(configDir, "gh-box")
+	file = path.Join(dir, "config.yml")
+	return dir, file, nil
 }
