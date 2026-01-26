@@ -13,7 +13,7 @@ func (c *ConfigPathCmd) Run() error {
 		return err
 	}
 
-	if err := os.MkdirAll(dir, os.ModeDir); err != nil {
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return fmt.Errorf("mkdir %q: %w", dir, err)
 	}
 
