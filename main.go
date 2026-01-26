@@ -1,12 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"slices"
 	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/briandowns/spinner"
 
 	"github.com/LeoRiether/gh-box/config"
@@ -19,16 +19,25 @@ const Day = 24 * time.Hour
 
 var spin = NewSpinner()
 
-var (
-	boxName = flag.String("box", "", "?")
-)
+type CLI struct {
+	Box        BoxCmd               `cmd:"" default:"withargs" help:"Choose a PR box"`
+	ConfigPath config.ConfigPathCmd `cmd:"" help:"Shows the configuration path"`
+}
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	flag.Parse()
 
+	cli := CLI{}
+	_ = kong.Parse(&cli).Run()
+}
+
+type BoxCmd struct {
+	Box string `arg:""`
+}
+
+func (b *BoxCmd) Run() error {
 	cfg := try(config.Get())("getting config")
-	box := cfg.Boxes[*boxName]
+	box := cfg.Boxes[b.Box]
 
 	spin.Start()
 
@@ -44,6 +53,7 @@ func main() {
 
 	spin.Stop()
 	fmt.Println(prdetails.Style())
+	return nil
 }
 
 type Spinner struct {

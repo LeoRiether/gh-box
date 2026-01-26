@@ -5,6 +5,7 @@ go 1.25.5
 require github.com/cli/go-gh/v2 v2.13.0
 
 require (
+	github.com/alecthomas/kong v1.13.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/briandowns/spinner v1.23.2 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
