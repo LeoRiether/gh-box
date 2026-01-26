@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"slices"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/briandowns/spinner"
 
+	"github.com/LeoRiether/gh-box/config"
 	"github.com/LeoRiether/gh-box/gh"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -17,18 +19,21 @@ const Day = 24 * time.Hour
 
 var spin = NewSpinner()
 
+var (
+	boxName = flag.String("box", "", "?")
+)
+
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	flag.Parse()
+
+	cfg := try(config.Get())("getting config")
+	box := cfg.Boxes[*boxName]
 
 	spin.Start()
 
 	spin.Message("searching PRs")
-	prs := try(gh.SearchPRs(
-		[]string{"LeoRiether", "qrno", "joaovaladares", "figueredo",
-			"fabricio-suarte", "daviromao", "gabrielpessoa1"},
-		"inloco",
-		time.Now().Add(-14*Day),
-	))("searching PRs")
+	prs := try(gh.SearchPRs(box.People, box.Organization, time.Now().Add(-14*Day)))("searching PRs")
 
 	spin.Message("fetching PR details")
 	prdetails := try(gh.ViewPRsDetails(prs))("fetching PR details")
