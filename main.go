@@ -32,12 +32,12 @@ func main() {
 }
 
 type BoxCmd struct {
-	Box string `arg:""`
+	Box string `arg:"" optional:""`
 }
 
 func (b *BoxCmd) Run() error {
-	cfg := try(config.Get())("getting config")
-	box := cfg.Boxes[b.Box]
+	cfg := try(config.Load())("getting config")
+	box := try(cfg.Box(b.Box))(fmt.Sprintf("box=%q", b.Box))
 
 	spin.Start()
 

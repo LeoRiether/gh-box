@@ -1,6 +1,7 @@
 package config
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,11 +12,29 @@ import (
 )
 
 var (
-	ErrNoConfigDir = errors.New("configuration file directory cannot be determined")
+	ErrNoConfigDir  = errors.New("configuration file directory cannot be determined")
+	ErrBoxNotFound  = errors.New("box not found")
+	ErrEmptyBoxName = errors.New("box name cannot be empty")
 )
 
 type Config struct {
-	Boxes map[string]Box `json:"boxes"`
+	DefaultBox string         `json:"default_box,omitempty"`
+	Boxes      map[string]Box `json:"boxes"`
+}
+
+func (c *Config) Box(boxName string) (Box, error) {
+	boxName = cmp.Or(boxName, c.DefaultBox)
+
+	if boxName == "" {
+		return Box{}, ErrEmptyBoxName
+	}
+
+	box, ok := c.Boxes[boxName]
+	if !ok {
+		return Box{}, ErrBoxNotFound
+	}
+
+	return box, nil
 }
 
 type Box struct {
@@ -23,7 +42,7 @@ type Box struct {
 	Organization string   `json:"organization,omitempty"`
 }
 
-func Get() (Config, error) {
+func Load() (Config, error) {
 	var empty Config
 
 	_, file, err := Location()
