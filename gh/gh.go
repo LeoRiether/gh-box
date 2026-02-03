@@ -70,7 +70,7 @@ func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []st
 }
 
 func ViewPRsDetails(prs PullRequests) (PRDetailsList, error) {
-	pool := workers.NewPool(8, func(pr PullRequest) (PRDetails, error) {
+	pool := workers.NewPool(16, func(pr PullRequest) (PRDetails, error) {
 		stdout, stderr, err := cli.Exec(
 			"pr", "view", pr.URL,
 			"--json", "reviewDecision,mergeable")

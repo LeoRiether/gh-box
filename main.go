@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"slices"
 	"time"
 
@@ -52,7 +53,7 @@ func (b *BoxCmd) Run() error {
 	})
 
 	spin.Stop()
-	fmt.Println(prdetails.Style())
+	pager(prdetails.Style())
 	return nil
 }
 
@@ -83,4 +84,20 @@ func try[T any](value T, err error) func(message string) T {
 
 		return value
 	}
+}
+
+// Calls `less -r` with the content passed in
+func pager(content string) error {
+	cmd := exec.Command("less", "--raw-control-chars", "--quit-if-one-screen", "--no-init")
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(stdin, content)
+	stdin.Close()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
 }
