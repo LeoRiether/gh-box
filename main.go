@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"slices"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/LeoRiether/gh-box/config"
 	"github.com/LeoRiether/gh-box/gh"
+	"github.com/LeoRiether/gh-box/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -38,8 +37,8 @@ type BoxCmd struct {
 	Box          string   `arg:"" optional:""`
 	Authors      []string `name:"authors" help:"Comma-separated list of authors; overrides box people" sep:","`
 	State        string   `help:"Filter by PR state (all, open, closed, merged)" default:"all" enum:"all,open,closed,merged"`
-	CreatedSince string   `name:"created-since" help:"Only PRs created in the last N days (e.g. 14d, 2w, 0 disables)" default:"14d"`
-	UpdatedSince string   `name:"updated-since" help:"Only PRs updated in the last N days (e.g. 7d, 2w, 0 disables)" default:"0"`
+	CreatedSince string   `name:"created-since" help:"Only PRs created in the last N days (e.g. 14d, 2w)" default:"14d"`
+	UpdatedSince string   `name:"updated-since" help:"Only PRs updated in the last N days (e.g. 7d, 2w)" default:""`
 }
 
 func (b *BoxCmd) Run() error {
@@ -51,21 +50,15 @@ func (b *BoxCmd) Run() error {
 		authors = b.Authors
 	}
 
-	createdSinceDays, err := parseSinceDays(b.CreatedSince)
-	if err != nil {
-		return fmt.Errorf("invalid --created-since: %w", err)
-	}
-	updatedSinceDays, err := parseSinceDays(b.UpdatedSince)
-	if err != nil {
-		return fmt.Errorf("invalid --updated-since: %w", err)
-	}
+	createdSince := try(util.ParseDuration(b.CreatedSince))("--created-since")
+	updatedSince := try(util.ParseDuration(b.UpdatedSince))("--updated-since")
 
 	opts := gh.SearchOptions{
 		Authors:      authors,
 		Organization: box.Organization,
-		CreatedAfter: daysAgo(createdSinceDays),
-		UpdatedAfter: daysAgo(updatedSinceDays),
-		State:        gh.PRStateFilter(b.State),
+		CreatedAfter: createdSince.Ago(),
+		UpdatedAfter: updatedSince.Ago(),
+		State:        gh.PRState(b.State),
 	}
 
 	spin.Start()
@@ -100,47 +93,6 @@ func NewSpinner() *Spinner {
 
 func (s *Spinner) Message(message string) {
 	s.Suffix = " " + message
-}
-
-func daysAgo(days int) *time.Time {
-	if days <= 0 {
-		return nil
-	}
-	t := time.Now().Add(-time.Duration(days) * Day)
-	return &t
-}
-
-func parseSinceDays(input string) (int, error) {
-	s := strings.TrimSpace(input)
-	if s == "" {
-		return 0, nil
-	}
-	if s == "0" {
-		return 0, nil
-	}
-	last := s[len(s)-1]
-	if last == 'd' || last == 'w' {
-		value := s[:len(s)-1]
-		n, err := strconv.Atoi(value)
-		if err != nil {
-			return 0, err
-		}
-		if n < 0 {
-			return 0, fmt.Errorf("must be >= 0")
-		}
-		if last == 'w' {
-			return n * 7, nil
-		}
-		return n, nil
-	}
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, err
-	}
-	if n < 0 {
-		return 0, fmt.Errorf("must be >= 0")
-	}
-	return n, nil
 }
 
 func try[T any](value T, err error) func(message string) T {

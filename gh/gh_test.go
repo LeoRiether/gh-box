@@ -1,10 +1,11 @@
 package gh
 
 import (
-	"reflect"
 	"slices"
 	"testing"
 	"time"
+
+	"github.com/LeoRiether/gh-box/test/assert"
 )
 
 func TestMakeSearchPRArgs(t *testing.T) {
@@ -16,7 +17,7 @@ func TestMakeSearchPRArgs(t *testing.T) {
 		Organization: "acme",
 		CreatedAfter: &created,
 		UpdatedAfter: &updated,
-		State:        StateMerged,
+		State:        Merged,
 	}
 
 	got := makeSearchPRArgs(opts)
@@ -31,14 +32,12 @@ func TestMakeSearchPRArgs(t *testing.T) {
 		"is:merged",
 	}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("args mismatch\n got: %#v\nwant: %#v", got, want)
-	}
+	assert.Equal(t, got, want)
 }
 
 func TestMakeSearchPRArgsMinimal(t *testing.T) {
 	opts := SearchOptions{
-		State: StateAny,
+		State: AnyState,
 	}
 
 	got := makeSearchPRArgs(opts)
@@ -48,21 +47,19 @@ func TestMakeSearchPRArgsMinimal(t *testing.T) {
 		"--",
 	}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("args mismatch\n got: %#v\nwant: %#v", got, want)
-	}
+	assert.Equal(t, got, want)
 }
 
 func TestMakeSearchPRArgsStates(t *testing.T) {
 	tests := []struct {
 		name  string
-		state PRStateFilter
+		state PRState
 		want  string
 	}{
-		{name: "open", state: StateOpen, want: "state:open"},
-		{name: "closed", state: StateClosed, want: "state:closed"},
-		{name: "merged", state: StateMerged, want: "is:merged"},
-		{name: "any", state: StateAny, want: ""},
+		{name: "open", state: Open, want: "state:open"},
+		{name: "closed", state: Closed, want: "state:closed"},
+		{name: "merged", state: Merged, want: "is:merged"},
+		{name: "any", state: AnyState, want: ""},
 	}
 
 	for _, tt := range tests {
@@ -70,15 +67,11 @@ func TestMakeSearchPRArgsStates(t *testing.T) {
 			got := makeSearchPRArgs(SearchOptions{State: tt.state})
 			if tt.want == "" {
 				for _, arg := range got {
-					if arg == "state:open" || arg == "state:closed" || arg == "is:merged" {
-						t.Fatalf("unexpected state arg %q in %#v", arg, got)
-					}
+					assert.False(t, arg == "state:open" || arg == "state:closed" || arg == "is:merged")
 				}
 				return
 			}
-			if !slices.Contains(got, tt.want) {
-				t.Fatalf("missing %q in %#v", tt.want, got)
-			}
+			assert.True(t, slices.Contains(got, tt.want))
 		})
 	}
 }

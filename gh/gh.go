@@ -22,21 +22,12 @@ func GetUser() (string, error) {
 	return response.Login, nil
 }
 
-type PRStateFilter string
-
-const (
-	StateAny    PRStateFilter = "all"
-	StateOpen   PRStateFilter = "open"
-	StateClosed PRStateFilter = "closed"
-	StateMerged PRStateFilter = "merged"
-)
-
 type SearchOptions struct {
 	Authors      []string
 	Organization string
 	CreatedAfter *time.Time
 	UpdatedAfter *time.Time
-	State        PRStateFilter
+	State        PRState
 }
 
 func SearchPRs(opts SearchOptions) (PullRequests, error) {
@@ -62,6 +53,7 @@ func makeSearchPRArgs(opts SearchOptions) []string {
 		"--",
 	}
 
+	// --- filter based on the date ---
 	if opts.CreatedAfter != nil {
 		args = append(args, "--created", ">="+opts.CreatedAfter.Format(time.DateOnly))
 	}
@@ -92,11 +84,11 @@ func makeSearchPRArgs(opts SearchOptions) []string {
 	}
 
 	switch opts.State {
-	case StateOpen:
+	case Open:
 		args = append(args, "state:open")
-	case StateClosed:
+	case Closed:
 		args = append(args, "state:closed")
-	case StateMerged:
+	case Merged:
 		args = append(args, "is:merged")
 	}
 
