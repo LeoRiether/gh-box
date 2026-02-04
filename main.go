@@ -12,6 +12,7 @@ import (
 
 	"github.com/LeoRiether/gh-box/config"
 	"github.com/LeoRiether/gh-box/gh"
+	"github.com/LeoRiether/gh-box/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -33,17 +34,37 @@ func main() {
 }
 
 type BoxCmd struct {
-	Box string `arg:"" optional:""`
+	Box          string   `arg:"" optional:""`
+	Authors      []string `name:"authors" help:"Comma-separated list of authors; overrides box people" sep:","`
+	State        string   `help:"Filter by PR state (all, open, closed, merged)" default:"all" enum:"all,open,closed,merged"`
+	CreatedSince string   `name:"created-since" help:"Only PRs created in the last N days (e.g. 14d, 2w)" default:"14d"`
+	UpdatedSince string   `name:"updated-since" help:"Only PRs updated in the last N days (e.g. 7d, 2w)" default:""`
 }
 
 func (b *BoxCmd) Run() error {
 	cfg := try(config.Load())("getting config")
 	box := try(cfg.Box(b.Box))(fmt.Sprintf("box=%q", b.Box))
 
+	authors := box.People
+	if len(b.Authors) > 0 {
+		authors = b.Authors
+	}
+
+	createdSince := try(util.ParseDuration(b.CreatedSince))("--created-since")
+	updatedSince := try(util.ParseDuration(b.UpdatedSince))("--updated-since")
+
+	opts := gh.SearchOptions{
+		Authors:      authors,
+		Organization: box.Organization,
+		CreatedAfter: createdSince.Ago(),
+		UpdatedAfter: updatedSince.Ago(),
+		State:        gh.PRState(b.State),
+	}
+
 	spin.Start()
 
 	spin.Message("searching PRs")
-	prs := try(gh.SearchPRs(box.People, box.Organization, time.Now().Add(-14*Day)))("searching PRs")
+	prs := try(gh.SearchPRs(opts))("searching PRs")
 
 	spin.Message("fetching PR details")
 	prdetails := try(gh.ViewPRsDetails(prs))("fetching PR details")

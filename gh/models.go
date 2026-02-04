@@ -16,9 +16,10 @@ type Author struct {
 type PRState string
 
 const (
-	Open   PRState = "open"
-	Merged PRState = "merged"
-	Closed PRState = "closed"
+	AnyState         = "all"
+	Open     PRState = "open"
+	Merged   PRState = "merged"
+	Closed   PRState = "closed"
 )
 
 type PullRequest struct {

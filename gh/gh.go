@@ -22,8 +22,16 @@ func GetUser() (string, error) {
 	return response.Login, nil
 }
 
-func SearchPRs(authors []string, org string, createdAfter time.Time) (PullRequests, error) {
-	args := makeSearchPRArgs(authors, org, createdAfter)
+type SearchOptions struct {
+	Authors      []string
+	Organization string
+	CreatedAfter *time.Time
+	UpdatedAfter *time.Time
+	State        PRState
+}
+
+func SearchPRs(opts SearchOptions) (PullRequests, error) {
+	args := makeSearchPRArgs(opts)
 
 	stdout, stderr, err := cli.Exec(args...)
 	if err != nil {
@@ -38,32 +46,50 @@ func SearchPRs(authors []string, org string, createdAfter time.Time) (PullReques
 	return prs, nil
 }
 
-func makeSearchPRArgs(authors []string, org string, createdAfter time.Time) []string {
+func makeSearchPRArgs(opts SearchOptions) []string {
 	args := []string{
 		"search", "prs",
-		"--created", ">=" + createdAfter.Format(time.DateOnly),
 		"--json", "author,createdAt,updatedAt,title,state,isDraft,url",
 		"--",
 	}
 
-	// --- filter authors ---
-	for i, author := range authors {
-		if i > 0 {
-			args = append(args, "OR")
-		}
-		args = append(args, "author:"+author)
+	// --- filter based on the date ---
+	if opts.CreatedAfter != nil {
+		args = append(args, "--created", ">="+opts.CreatedAfter.Format(time.DateOnly))
+	}
+	if opts.UpdatedAfter != nil {
+		args = append(args, "--updated", ">="+opts.UpdatedAfter.Format(time.DateOnly))
+	}
 
-		if i == 0 {
-			args[len(args)-1] = "(" + args[len(args)-1]
-		}
-		if i == len(authors)-1 {
-			args[len(args)-1] = args[len(args)-1] + ")"
+	// --- filter authors ---
+	if len(opts.Authors) > 0 {
+		for i, author := range opts.Authors {
+			if i > 0 {
+				args = append(args, "OR")
+			}
+			args = append(args, "author:"+author)
+
+			if i == 0 {
+				args[len(args)-1] = "(" + args[len(args)-1]
+			}
+			if i == len(opts.Authors)-1 {
+				args[len(args)-1] = args[len(args)-1] + ")"
+			}
 		}
 	}
 
 	// --- filter organization ---
-	if org != "" {
-		args = append(args, "org:"+org)
+	if opts.Organization != "" {
+		args = append(args, "org:"+opts.Organization)
+	}
+
+	switch opts.State {
+	case Open:
+		args = append(args, "state:open")
+	case Closed:
+		args = append(args, "state:closed")
+	case Merged:
+		args = append(args, "is:merged")
 	}
 
 	return args
