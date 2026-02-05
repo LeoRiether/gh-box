@@ -50,7 +50,6 @@ func makeSearchPRArgs(opts SearchOptions) []string {
 	args := []string{
 		"search", "prs",
 		"--json", "author,createdAt,updatedAt,title,state,isDraft,url",
-		"--",
 	}
 
 	// --- filter based on the date ---
@@ -60,6 +59,8 @@ func makeSearchPRArgs(opts SearchOptions) []string {
 	if opts.UpdatedAfter != nil {
 		args = append(args, "--updated", ">="+opts.UpdatedAfter.Format(time.DateOnly))
 	}
+
+	args = append(args, "--")
 
 	// --- filter authors ---
 	if len(opts.Authors) > 0 {
